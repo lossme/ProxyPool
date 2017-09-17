@@ -1,0 +1,4 @@
+flask
+execjs
+lxml
+redis
