@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Date    : 2017-09-09 00:13:49
 # @Author  : Key
@@ -9,26 +8,19 @@ from flask import Flask
 from flask_restful import Resource, Api
 from redis_client import RedisClient
 from flask_restful import reqparse
+
+from exceptions import APIBaseException, ParamError
+
 app = Flask(__name__)
 api = Api(app)
 
-# 状态码
-SUCCESS_CODE = 0
-PARAM_ERROR = 1
 
-
-def succ(data=None):
-    return {
-        "code": SUCCESS_CODE,
-        "data": data
-    }
-
-
-def error(error_code, msg=''):
-    return {
-        "code": error_code,
-        "msg": msg
-    }
+def error_handle(func):
+    def wraper(*args, **kwargs):
+        try:
+            return {'code': 0, 'data': func()}
+        except APIBaseException as e:
+            return {'code': e.error_code, 'request': e.request, 'msg': e.msg}
 
 
 class ProxyManage(Resource):
@@ -40,42 +32,47 @@ class ProxyManage(Resource):
         self.parser.add_argument('type', type=str, required=True,
                                  help='required args of proxy type: http/https, like ?type=http')
 
+    @error_handle
     def get(self):
         self.parser.add_argument('all', type=str, default='false', required=False, help='')
         get_all = self.parser.parse_args()['all']
         proxy_type = self.parser.parse_args()['type']
         if proxy_type == 'http':
             if get_all == 'true':
-                return succ(self.http_proxy.get_all())
+                return self.http_proxy.get_all()
             else:
-                return succ(self.http_proxy.get_one())
+                return self.http_proxy.get_one()
         elif proxy_type == 'https':
             if get_all == 'true':
-                return succ(self.https_proxy.get_all())
+                return self.https_proxy.get_all()
             else:
-                return succ(self.https_proxy.get_one())
+                return self.https_proxy.get_one()
         else:
-            return error(PARAM_ERROR, 'proxy type param error,must be http/https')
+            raise ParamError(msg='proxy type param error,must be http/https')
 
+    @error_handle
     def delete(self):
-        self.parser.add_argument('ip', type=str, required=True,
-                                 help='required args of ip: like ?type=http&ip=6.6.6.6:66')
+        self.parser.add_argument('ip', type=str, required=True)
 
-        proxy_type = self.parser.parse_args()['type']
+        args = self.parser.parse_args()
+
+        proxy_type = args.get('type')
+        ip = args.get('ip')
         if proxy_type == 'http':
-            return succ(self.http_proxy.delete(ip))
+            return self.http_proxy.delete(ip)
         if proxy_type == 'https':
-            return succ(self.https_proxy.delete(ip))
+            return self.https_proxy.delete(ip)
         else:
             self.http_proxy.delete(ip)
             self.https_proxy.delete(ip)
-            return succ()
+            return
 
 
 class Welcome(Resource):
 
+    @error_handle
     def get(self):
-        return succ('ok, now it works!')
+        return 'ok, now it works!'
 
 api.add_resource(Welcome, '/')
 api.add_resource(ProxyManage, '/proxy')
