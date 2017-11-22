@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Date    : 2017-09-08 23:18:44
 # @Author  : Key
@@ -38,6 +37,7 @@ class ProxyRefresh():
     def valid_ip(self, ip):
         if proxy_is_useful(ip, self.proxy_type):
             self.redis_handler.add(ip)
+            print('ok', ip)
         else:
             self.redis_handler.delete(ip)
 

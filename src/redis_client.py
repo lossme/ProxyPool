@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Date    : 2017-09-07 15:38:43
 # @Author  : Key

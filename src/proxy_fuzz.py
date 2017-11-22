@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Date    : 2017-09-06 10:33:46
 # @Author  : Key
@@ -14,7 +13,7 @@ import socket
 try:
     import urllib3
     urllib3.disable_warnings()
-except Exception:
+except ImportError:
     pass
 
 TIMEOUT = 15
@@ -32,34 +31,13 @@ socket.setdefaulttimeout(TIMEOUT)
 verify_ip_re = re.compile('^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)(:(\d{1,5}))?$')
 
 
-def timeout_retry(times=3):
-    """生成器函数使用的装饰器，错误重连，若出现其它异常则抛出StopIteration
-    @times: 超时重连次数
-    @return:
-    """
-    def retry(func):
-        def wrapper(*args, **kwargs):
-            if times > 0:
-                try:
-                    return func(*args, **kwargs)
-                except requests.exceptions.Timeout:
-                    return func(*args, **kwargs)
-                except Exception:
-                    raise StopIteration
-            else:
-                raise StopIteration
-        return wrapper
-    return retry
-
-
-@timeout_retry()
 def xici(page=5):
     """
     抓取西刺代理 http://www.xicidaili.com/
     @param: 翻页数
     @return:
     """
-    url_list = ('http://www.xicidaili.com/nn/{0}'.format(i) for i in range(1, page+1))
+    url_list = ('http://www.xicidaili.com/nn/{0}'.format(i) for i in range(1, page + 1))
     for url in url_list:
         html = requests.get(url=url, headers=HEADERS).content.decode('utf-8')
         html_tree = etree.HTML(html)
@@ -68,7 +46,6 @@ def xici(page=5):
             yield ':'.join(proxy.xpath('./td/text()')[0:2])
 
 
-@timeout_retry()
 def kuaidaili(page=5):
     """
     抓取快代理IP http://www.kuaidaili.com/
@@ -107,7 +84,6 @@ def kuaidaili(page=5):
             yield ':'.join(proxy.xpath('./td/text()')[0:2])
 
 
-@timeout_retry()
 def liuliuip(proxy_number=100):
     """
     抓取代理66 http://www.66ip.cn/
@@ -121,7 +97,6 @@ def liuliuip(proxy_number=100):
         yield proxy
 
 
-@timeout_retry()
 def youdaili(days=1):
     """
     抓取有代理 http://www.youdaili.net/Daili/http/
@@ -139,7 +114,6 @@ def youdaili(days=1):
             yield proxy
 
 
-@timeout_retry()
 def goubanjia():
     """
     抓取guobanjia http://www.goubanjia.com/free/gngn/index.shtml
@@ -166,7 +140,6 @@ def goubanjia():
             yield '{}:{}'.format(ip_addr, port)
 
 
-@timeout_retry()
 def xdaili():
     """
     抓取guobanjia http://www.goubanjia.com/free/gngn/index.shtml
